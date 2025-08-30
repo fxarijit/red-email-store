@@ -1,249 +1,209 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Email Manager Pro</title>
-  <style>
-    body { margin: 0; font-family: "Segoe UI", sans-serif; background: #000; color: #fff; }
-    header { text-align: center; padding: 15px; font-size: 28px; font-weight: bold; color: cyan; border-bottom: 2px solid #0ff; }
-
-    /* Top Bar */
-    .top-bar {
-      display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 15px; background: #111; border-bottom: 1px solid #333;
-    }
-    .top-bar input, .top-bar select, .top-bar label {
-      padding: 6px; border-radius: 6px; border: 1px solid #444; background: #000; color: white; font-size: 14px;
-    }
-    .platform-filter { display: flex; gap: 8px; align-items: center; }
-
-    .container { padding: 20px; }
-    .row {
-      display: flex; align-items: center; background: #111; border: 1px solid #333;
-      margin: 8px 0; border-radius: 8px; padding: 10px; transition: 0.3s;
-    }
-    .row:hover { border-color: cyan; box-shadow: 0 0 10px cyan; }
-    .logos img { width: 20px; height: 20px; margin: 0 3px; }
-    .email { flex: 1; margin: 0 10px; font-weight: bold; font-size: 14px; }
-    .status { padding: 3px 10px; border-radius: 6px; margin-right: 10px; font-size: 13px; }
-    .status.red { background: red; }
-    .status.orange { background: orange; color: black; }
-    .status.green { background: lime; color: black; }
-    .days { background: #09f; padding: 4px 10px; border-radius: 6px; font-weight: bold; margin-right: 10px; }
-    .copy-btn, .edit-btn, .delete-btn {
-      border: none; color: white; padding: 5px 10px; border-radius: 6px;
-      cursor: pointer; font-weight: bold; margin-left: 5px;
-    }
-    .copy-btn { background: #007bff; }
-    .edit-btn { background: orange; }
-    .delete-btn { background: red; }
-    .copied-msg { font-size: 12px; color: lime; margin-left: 6px; display: none; }
-    .add-btn {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      background: #0066ff; color: white; font-size: 18px; font-weight: bold;
-      border: none; border-radius: 30px; padding: 12px 30px; cursor: pointer;
-    }
-    .add-btn:hover { background: #0044aa; }
-
-    /* Modal */
-    .modal {
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8); justify-content: center; align-items: center;
-    }
-    .modal-content {
-      background: #111; padding: 20px; border-radius: 10px; width: 300px; border: 2px solid cyan;
-    }
-    .modal-content h3 { margin: 0 0 15px; color: cyan; text-align: center; }
-    .modal-content input, .modal-content select {
-      width: 100%; margin-bottom: 10px; padding: 8px;
-      border: 1px solid #444; border-radius: 6px; background: #000; color: white;
-    }
-    .modal-content button {
-      width: 100%; padding: 10px; background: #00ccff;
-      border: none; border-radius: 6px; font-weight: bold; cursor: pointer;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Email Manager Pro - Team Version</title>
+<style>
+  body { margin: 0; font-family: "Segoe UI", sans-serif; background: #000; color: #fff; }
+  header { text-align: center; padding: 15px; font-size: 28px; font-weight: bold; color: cyan; border-bottom: 2px solid #0ff; }
+  .top-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 15px; background: #111; border-bottom: 1px solid #333; }
+  .top-bar input, .top-bar select, .top-bar label { padding: 6px; border-radius: 6px; border: 1px solid #444; background: #000; color: white; font-size: 14px; }
+  .platform-filter { display: flex; gap: 8px; align-items: center; }
+  .container { padding: 20px; }
+  .row { display: flex; align-items: center; background: #111; border: 1px solid #333; margin: 8px 0; border-radius: 8px; padding: 10px; transition: 0.3s; }
+  .row:hover { border-color: cyan; box-shadow: 0 0 10px cyan; }
+  .logos img { width: 20px; height: 20px; margin: 0 3px; }
+  .email { flex: 1; margin: 0 10px; font-weight: bold; font-size: 14px; }
+  .status { padding: 3px 10px; border-radius: 6px; margin-right: 10px; font-size: 13px; }
+  .status.red { background: red; }
+  .status.orange { background: orange; color: black; }
+  .status.green { background: lime; color: black; }
+  .days { background: #09f; padding: 4px 10px; border-radius: 6px; font-weight: bold; margin-right: 10px; }
+  .copy-btn, .edit-btn, .delete-btn { border: none; color: white; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: 5px; transition: 0.2s; }
+  .copy-btn { background: #007bff; }
+  .edit-btn { background: orange; }
+  .delete-btn { background: red; }
+  .copied-msg { font-size: 12px; color: lime; margin-left: 6px; display: none; }
+  .add-btn { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0066ff; color: white; font-size: 18px; font-weight: bold; border: none; border-radius: 30px; padding: 12px 30px; cursor: pointer; transition: 0.2s; }
+  .add-btn:hover { background: #0044aa; }
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
+  .modal-content { background: #111; padding: 20px; border-radius: 10px; width: 90%; max-width: 350px; border: 2px solid cyan; }
+  .modal-content h3 { margin: 0 0 15px; color: cyan; text-align: center; }
+  .modal-content input, .modal-content select { width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #444; border-radius: 6px; background: #000; color: white; }
+  .modal-content button { width: 100%; padding: 10px; background: #00ccff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+</style>
 </head>
 <body>
-  <header>EMAILS</header>
+<header>EMAILS</header>
 
-  <!-- Search + Filter -->
-  <div class="top-bar">
-    <input type="text" id="searchBox" placeholder="Search email...">
+<div class="top-bar">
+  <input type="text" id="searchBox" placeholder="Search email...">
+  <select id="filterBox">
+    <option value="All">All</option>
+    <option value="Under Use">Under Use</option>
+    <option value="OK">OK</option>
+    <option value="Black List">Black List</option>
+    <option value="Suspend">Suspend</option>
+    <option value="Ban">Ban</option>
+  </select>
+  <div class="platform-filter">
+    <label><input type="checkbox" value="Google" class="platformCheck"> Google</label>
+    <label><input type="checkbox" value="Facebook" class="platformCheck"> Facebook</label>
+    <label><input type="checkbox" value="X" class="platformCheck"> X</label>
+  </div>
+</div>
 
-    <!-- Status Filter -->
-    <select id="filterBox" onchange="renderEmails()">
-      <option value="All">All</option>
+<div class="container" id="emailList"></div>
+<button class="add-btn" id="addBtn">+ Add Email</button>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h3 id="modalTitle">Add New Email</h3>
+    <input type="email" id="newEmail" placeholder="example@gmail.com">
+    <select id="platforms" multiple>
+      <option value="Google">Google</option>
+      <option value="Facebook">Facebook</option>
+      <option value="X">X</option>
+    </select>
+    <select id="newStatus">
       <option value="Under Use">Under Use</option>
       <option value="OK">OK</option>
       <option value="Black List">Black List</option>
       <option value="Suspend">Suspend</option>
       <option value="Ban">Ban</option>
     </select>
-
-    <!-- Platform Filter -->
-    <div class="platform-filter">
-      <label><input type="checkbox" value="Google" class="platformCheck"> Google</label>
-      <label><input type="checkbox" value="Facebook" class="platformCheck"> Facebook</label>
-      <label><input type="checkbox" value="X" class="platformCheck"> X</label>
-    </div>
+    <input type="number" id="newDays" placeholder="00" min="0">
+    <button id="saveBtn">Save</button>
   </div>
+</div>
 
-  <div class="container" id="emailList"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, push, set, onValue, remove, get, child } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-  <button class="add-btn" onclick="openModal()">+ Add Email</button>
+const firebaseConfig = {
+  apiKey: "AIzaSyCnSusl1EBGCfbNFlndzKYq4qijNF-kwKQ",
+  authDomain: "email-store-35297.firebaseapp.com",
+  databaseURL: "https://email-store-35297-default-rtdb.firebaseio.com",
+  projectId: "email-store-35297",
+  storageBucket: "email-store-35297.appspot.com",
+  messagingSenderId: "1092552262184",
+  appId: "1:1092552262184:web:34cfd2082f14c6aa092b1d"
+};
 
-  <!-- Modal -->
-  <div class="modal" id="modal">
-    <div class="modal-content">
-      <h3 id="modalTitle">Add New Email</h3>
-      <input type="email" id="newEmail" placeholder="example@gmail.com">
-      <select id="platforms" multiple>
-        <option value="Google">Google</option>
-        <option value="Facebook">Facebook</option>
-        <option value="X">X</option>
-      </select>
-      <select id="newStatus">
-        <option value="Under Use">Under Use</option>
-        <option value="OK">OK</option>
-        <option value="Black List">Black List</option>
-        <option value="Suspend">Suspend</option>
-        <option value="Ban">Ban</option>
-      </select>
-      <input type="number" id="newDays" placeholder="00" min="0">
-      <button onclick="saveEmail()">Save</button>
-    </div>
-  </div>
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const emailsRef = ref(db, 'emails');
 
-  <script>
-    let emails = JSON.parse(localStorage.getItem("emails")) || [];
-    let editIndex = null;
+let editKey = null;
+const logoMap = {
+  "Google": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg",
+  "Facebook": "https://upload.wikimedia.org/wikipedia/commons/4/44/Facebook_Logo.png",
+  "X": "https://upload.wikimedia.org/wikipedia/commons/5/53/X_logo_2023.svg"
+};
 
-    const logoMap = {
-      "Google": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg",
-      "Facebook": "https://upload.wikimedia.org/wikipedia/commons/4/44/Facebook_Logo.png",
-      "X": "https://upload.wikimedia.org/wikipedia/commons/5/53/X_logo_2023.svg"
-    };
+function renderEmails(snapshot){
+  const list = document.getElementById("emailList");
+  const searchText = document.getElementById("searchBox").value.toLowerCase();
+  const filterValue = document.getElementById("filterBox").value;
+  const checkedPlatforms = Array.from(document.querySelectorAll(".platformCheck:checked")).map(cb=>cb.value);
+  list.innerHTML = "";
+  snapshot.forEach(snap=>{
+    const item = snap.val(); const key = snap.key;
+    if(!item.email.toLowerCase().includes(searchText)) return;
+    if(filterValue!=="All" && item.status!==filterValue) return;
+    if(checkedPlatforms.length && !checkedPlatforms.some(p=>item.multiSelect.includes(p))) return;
+    const colorClass = item.days==0?"green":item.days<5?"orange":"red";
+    const colorIcon = item.days==0?"🟢":item.days<5?"🟠":"🔴";
+    const logosHTML = (item.multiSelect||[]).map(val=>`<img src="${logoMap[val]}">`).join("");
+    const row = document.createElement("div"); row.className="row";
+    row.innerHTML=`
+      <div class="logos">${logosHTML}</div>
+      <div class="email ${colorClass}">${colorIcon} ${item.email}</div>
+      <div class="status ${colorClass}">${item.status}</div>
+      <div class="days">${String(item.days).padStart(2,"0")}</div>
+      <button class="copy-btn">Copy</button>
+      <span class="copied-msg">Copied!</span>
+      <button class="edit-btn">Edit</button>
+      <button class="delete-btn">Delete</button>
+    `;
+    list.appendChild(row);
 
-    function saveToStorage() {
-      localStorage.setItem("emails", JSON.stringify(emails));
-    }
+    // Attach event listeners to dynamically created buttons
+    const [copyBtn, editBtn, deleteBtn] = row.querySelectorAll("button");
+    const copiedMsg = row.querySelector(".copied-msg");
 
-    function renderEmails() {
-      const list = document.getElementById("emailList");
-      const searchText = document.getElementById("searchBox").value.toLowerCase();
-      const filterValue = document.getElementById("filterBox").value;
-      const checkedPlatforms = Array.from(document.querySelectorAll(".platformCheck:checked")).map(cb => cb.value);
+    copyBtn.addEventListener("click", ()=>{
+      navigator.clipboard.writeText(item.email).then(()=>{
+        copiedMsg.style.display="inline";
+        setTimeout(()=>copiedMsg.style.display="none",1500);
+      });
+    });
 
-      list.innerHTML = "";
-      emails
-        .filter(item => item.email.toLowerCase().includes(searchText))
-        .filter(item => filterValue === "All" || item.status === filterValue)
-        .filter(item => checkedPlatforms.length === 0 || checkedPlatforms.every(p => item.multiSelect.includes(p)))
-        .forEach((item, index) => {
-          let colorClass = item.days == 0 ? "green" : item.days < 5 ? "orange" : "red";
-          let colorIcon = item.days == 0 ? "🟢" : item.days < 5 ? "🟠" : "🔴";
-          let logosHTML = (item.multiSelect || []).map(val => `<img src="${logoMap[val]}">`).join("");
+    editBtn.addEventListener("click", ()=>editEmail(key));
+    deleteBtn.addEventListener("click", ()=>deleteEmail(key));
+  });
+}
 
-          const row = document.createElement("div");
-          row.className = "row";
-          row.innerHTML = `
-            <div class="logos">${logosHTML}</div>
-            <div class="email ${colorClass}">${colorIcon} ${item.email}</div>
-            <div class="status ${colorClass}">${item.status || "SELECT"}</div>
-            <div class="days">${String(item.days).padStart(2, "0")}</div>
-            <button class="copy-btn" onclick="copyEmail(${index})">Copy</button>
-            <span class="copied-msg" id="copied-${index}">Copied!</span>
-            <button class="edit-btn" onclick="editEmail(${index})">Edit</button>
-            <button class="delete-btn" onclick="deleteEmail(${index})">Delete</button>
-          `;
-          list.appendChild(row);
-        });
-    }
+onValue(emailsRef, renderEmails);
 
-    function saveEmail() {
-      const email = document.getElementById("newEmail").value.trim();
-      const multiSelect = Array.from(document.getElementById("platforms").selectedOptions).map(o => o.value);
-      let status = document.getElementById("newStatus").value;
-      let days = parseInt(document.getElementById("newDays").value) || 0;
+function saveEmail(){
+  const email = document.getElementById("newEmail").value.trim();
+  const multiSelect = Array.from(document.getElementById("platforms").selectedOptions).map(o=>o.value);
+  let status = document.getElementById("newStatus").value;
+  let days = parseInt(document.getElementById("newDays").value)||0;
+  if(!email) return alert("Enter email");
+  if(days===0) status="OK";
+  const newItem = { email, multiSelect, status, days };
+  if(editKey){ set(ref(db,'emails/'+editKey), newItem); editKey=null; }
+  else push(emailsRef,newItem);
+  closeModal();
+}
 
-      if (!email) return alert("Enter email");
-      if (days === 0) status = "OK";
-
-      const newItem = { email, multiSelect, status, days };
-
-      if (editIndex !== null) {
-        emails[editIndex] = newItem;
-        editIndex = null;
-      } else {
-        emails.push(newItem);
-      }
-
-      saveToStorage();
-      closeModal();
-      renderEmails();
-    }
-
-    function editEmail(index) {
-      const item = emails[index];
-      editIndex = index;
-
-      document.getElementById("modal").style.display = "flex";
-      document.getElementById("modalTitle").textContent = "Edit Email";
-      document.getElementById("newEmail").value = item.email;
-      document.getElementById("newStatus").value = item.status;
-      document.getElementById("newDays").value = item.days;
-      Array.from(document.getElementById("platforms").options).forEach(opt => {
-        opt.selected = (item.multiSelect || []).includes(opt.value);
+function editEmail(key){
+  get(child(ref(db),'emails/'+key)).then(snap=>{
+    if(snap.exists()){
+      const item=snap.val(); editKey=key; openModal();
+      document.getElementById("modalTitle").textContent="Edit Email";
+      document.getElementById("newEmail").value=item.email;
+      document.getElementById("newStatus").value=item.status;
+      document.getElementById("newDays").value=item.days;
+      Array.from(document.getElementById("platforms").options).forEach(opt=>{
+        opt.selected=(item.multiSelect||[]).includes(opt.value);
       });
     }
+  });
+}
 
-    function deleteEmail(index) {
-      if (confirm("Are you sure you want to delete this email?")) {
-        emails.splice(index, 1);
-        saveToStorage();
-        renderEmails();
-      }
-    }
+function deleteEmail(key){ if(confirm("Are you sure you want to delete this email?")) remove(ref(db,'emails/'+key)); }
 
-    function copyEmail(index) {
-      const email = emails[index].email;
-      navigator.clipboard.writeText(email).then(() => {
-        const msg = document.getElementById("copied-" + index);
-        msg.style.display = "inline";
-        setTimeout(() => msg.style.display = "none", 1500);
-      });
-    }
+function openModal(){ document.getElementById("modal").style.display="flex";
+  if(!editKey){
+    document.getElementById("modalTitle").textContent="Add New Email";
+    document.getElementById("newEmail").value="";
+    document.getElementById("newStatus").value="Under Use";
+    document.getElementById("newDays").value="";
+    document.getElementById("platforms").selectedIndex=-1;
+  }
+}
 
-    function openModal() {
-      document.getElementById("modal").style.display = "flex";
-      document.getElementById("modalTitle").textContent = "Add New Email";
-      document.getElementById("newEmail").value = "";
-      document.getElementById("newStatus").value = "Under Use";
-      document.getElementById("newDays").value = "";
-      document.getElementById("platforms").selectedIndex = -1;
-    }
+function closeModal(){ document.getElementById("modal").style.display="none"; editKey=null; }
 
-    function closeModal() {
-      document.getElementById("modal").style.display = "none";
-    }
+document.getElementById("addBtn").addEventListener("click", openModal);
+document.getElementById("saveBtn").addEventListener("click", saveEmail);
+document.getElementById("modal").addEventListener("click", e=>{ if(e.target===document.getElementById("modal")) closeModal(); });
+document.getElementById("searchBox").addEventListener("input", ()=>onValue(emailsRef, renderEmails));
+document.querySelectorAll(".platformCheck").forEach(cb=>cb.addEventListener("change", ()=>onValue(emailsRef, renderEmails)));
 
-    // Daily countdown
-    setInterval(() => {
-      emails.forEach(item => {
-        if (item.days > 0) {
-          item.days -= 1;
-          if (item.days === 0) {
-            item.status = "OK";
-          }
-        }
-      });
-      saveToStorage();
-      renderEmails();
-    }, 86400000);
-
-    renderEmails();
-    document.getElementById("searchBox").addEventListener("input", renderEmails);
-    document.querySelectorAll(".platformCheck").forEach(cb => cb.addEventListener("change", renderEmails));
-  </script>
+// Daily countdown
+setInterval(()=>{
+  onValue(emailsRef, snapshot=>{
+    snapshot.forEach(snap=>{
+      let item = snap.val();
+      if(item.days>0){ item.days--; if(item.days===0) item.status="OK"; set(ref(db,'emails/'+snap.key),item);}
+    });
+  });
+}, 86400000);
+</script>
 </body>
 </html>
