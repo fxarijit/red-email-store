@@ -6,6 +6,16 @@
   <style>
     body { margin: 0; font-family: "Segoe UI", sans-serif; background: #000; color: #fff; }
     header { text-align: center; padding: 15px; font-size: 28px; font-weight: bold; color: cyan; border-bottom: 2px solid #0ff; }
+
+    /* Top Bar */
+    .top-bar {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 15px; background: #111; border-bottom: 1px solid #333;
+    }
+    .top-bar input, .top-bar select, .top-bar label {
+      padding: 6px; border-radius: 6px; border: 1px solid #444; background: #000; color: white; font-size: 14px;
+    }
+    .platform-filter { display: flex; gap: 8px; align-items: center; }
+
     .container { padding: 20px; }
     .row {
       display: flex; align-items: center; background: #111; border: 1px solid #333;
@@ -26,12 +36,14 @@
     .copy-btn { background: #007bff; }
     .edit-btn { background: orange; }
     .delete-btn { background: red; }
+    .copied-msg { font-size: 12px; color: lime; margin-left: 6px; display: none; }
     .add-btn {
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
       background: #0066ff; color: white; font-size: 18px; font-weight: bold;
       border: none; border-radius: 30px; padding: 12px 30px; cursor: pointer;
     }
     .add-btn:hover { background: #0044aa; }
+
     /* Modal */
     .modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -53,6 +65,29 @@
 </head>
 <body>
   <header>EMAILS</header>
+
+  <!-- Search + Filter -->
+  <div class="top-bar">
+    <input type="text" id="searchBox" placeholder="Search email...">
+
+    <!-- Status Filter -->
+    <select id="filterBox" onchange="renderEmails()">
+      <option value="All">All</option>
+      <option value="Under Use">Under Use</option>
+      <option value="OK">OK</option>
+      <option value="Black List">Black List</option>
+      <option value="Suspend">Suspend</option>
+      <option value="Ban">Ban</option>
+    </select>
+
+    <!-- Platform Filter -->
+    <div class="platform-filter">
+      <label><input type="checkbox" value="Google" class="platformCheck"> Google</label>
+      <label><input type="checkbox" value="Facebook" class="platformCheck"> Facebook</label>
+      <label><input type="checkbox" value="X" class="platformCheck"> X</label>
+    </div>
+  </div>
+
   <div class="container" id="emailList"></div>
 
   <button class="add-btn" onclick="openModal()">+ Add Email</button>
@@ -68,11 +103,11 @@
         <option value="X">X</option>
       </select>
       <select id="newStatus">
-        <option value="">SELECT</option>
+        <option value="Under Use">Under Use</option>
+        <option value="OK">OK</option>
         <option value="Black List">Black List</option>
         <option value="Suspend">Suspend</option>
         <option value="Ban">Ban</option>
-        <option value="Under Use">Under Use</option>
       </select>
       <input type="number" id="newDays" placeholder="00" min="0">
       <button onclick="saveEmail()">Save</button>
@@ -95,25 +130,34 @@
 
     function renderEmails() {
       const list = document.getElementById("emailList");
-      list.innerHTML = "";
-      emails.forEach((item, index) => {
-        let colorClass = item.days == 0 ? "green" : item.days < 5 ? "orange" : "red";
-        let colorIcon = item.days == 0 ? "🟢" : item.days < 5 ? "🟠" : "🔴";
-        let logosHTML = (item.multiSelect || []).map(val => `<img src="${logoMap[val]}">`).join("");
+      const searchText = document.getElementById("searchBox").value.toLowerCase();
+      const filterValue = document.getElementById("filterBox").value;
+      const checkedPlatforms = Array.from(document.querySelectorAll(".platformCheck:checked")).map(cb => cb.value);
 
-        const row = document.createElement("div");
-        row.className = "row";
-        row.innerHTML = `
-          <div class="logos">${logosHTML}</div>
-          <div class="email ${colorClass}">${colorIcon} ${item.email}</div>
-          <div class="status ${colorClass}">${item.status || "SELECT"}</div>
-          <div class="days">${String(item.days).padStart(2, "0")}</div>
-          <button class="copy-btn" onclick="copyEmail(${index})">Copy</button>
-          <button class="edit-btn" onclick="editEmail(${index})">Edit</button>
-          <button class="delete-btn" onclick="deleteEmail(${index})">Delete</button>
-        `;
-        list.appendChild(row);
-      });
+      list.innerHTML = "";
+      emails
+        .filter(item => item.email.toLowerCase().includes(searchText))
+        .filter(item => filterValue === "All" || item.status === filterValue)
+        .filter(item => checkedPlatforms.length === 0 || checkedPlatforms.every(p => item.multiSelect.includes(p)))
+        .forEach((item, index) => {
+          let colorClass = item.days == 0 ? "green" : item.days < 5 ? "orange" : "red";
+          let colorIcon = item.days == 0 ? "🟢" : item.days < 5 ? "🟠" : "🔴";
+          let logosHTML = (item.multiSelect || []).map(val => `<img src="${logoMap[val]}">`).join("");
+
+          const row = document.createElement("div");
+          row.className = "row";
+          row.innerHTML = `
+            <div class="logos">${logosHTML}</div>
+            <div class="email ${colorClass}">${colorIcon} ${item.email}</div>
+            <div class="status ${colorClass}">${item.status || "SELECT"}</div>
+            <div class="days">${String(item.days).padStart(2, "0")}</div>
+            <button class="copy-btn" onclick="copyEmail(${index})">Copy</button>
+            <span class="copied-msg" id="copied-${index}">Copied!</span>
+            <button class="edit-btn" onclick="editEmail(${index})">Edit</button>
+            <button class="delete-btn" onclick="deleteEmail(${index})">Delete</button>
+          `;
+          list.appendChild(row);
+        });
     }
 
     function saveEmail() {
@@ -123,6 +167,7 @@
       let days = parseInt(document.getElementById("newDays").value) || 0;
 
       if (!email) return alert("Enter email");
+      if (days === 0) status = "OK";
 
       const newItem = { email, multiSelect, status, days };
 
@@ -161,15 +206,19 @@
     }
 
     function copyEmail(index) {
-      const email = emails[index].email; // copy only the raw email
-      navigator.clipboard.writeText(email).then(() => alert("Copied: " + email));
+      const email = emails[index].email;
+      navigator.clipboard.writeText(email).then(() => {
+        const msg = document.getElementById("copied-" + index);
+        msg.style.display = "inline";
+        setTimeout(() => msg.style.display = "none", 1500);
+      });
     }
 
     function openModal() {
       document.getElementById("modal").style.display = "flex";
       document.getElementById("modalTitle").textContent = "Add New Email";
       document.getElementById("newEmail").value = "";
-      document.getElementById("newStatus").value = "";
+      document.getElementById("newStatus").value = "Under Use";
       document.getElementById("newDays").value = "";
       document.getElementById("platforms").selectedIndex = -1;
     }
@@ -178,22 +227,23 @@
       document.getElementById("modal").style.display = "none";
     }
 
-    // Daily countdown (every 24h = 1 day)
+    // Daily countdown
     setInterval(() => {
       emails.forEach(item => {
         if (item.days > 0) {
           item.days -= 1;
           if (item.days === 0) {
-            item.status = ""; // reset status when 0
+            item.status = "OK";
           }
         }
       });
       saveToStorage();
       renderEmails();
-    }, 86400000); // 24 hours in ms
+    }, 86400000);
 
-    // Initial render
     renderEmails();
+    document.getElementById("searchBox").addEventListener("input", renderEmails);
+    document.querySelectorAll(".platformCheck").forEach(cb => cb.addEventListener("change", renderEmails));
   </script>
 </body>
 </html>
