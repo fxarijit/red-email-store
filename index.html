@@ -80,7 +80,7 @@
   </div>
 
   <script>
-    let emails = [];
+    let emails = JSON.parse(localStorage.getItem("emails")) || [];
     let editIndex = null;
 
     const logoMap = {
@@ -88,6 +88,10 @@
       "Facebook": "https://upload.wikimedia.org/wikipedia/commons/4/44/Facebook_Logo.png",
       "X": "https://upload.wikimedia.org/wikipedia/commons/5/53/X_logo_2023.svg"
     };
+
+    function saveToStorage() {
+      localStorage.setItem("emails", JSON.stringify(emails));
+    }
 
     function renderEmails() {
       const list = document.getElementById("emailList");
@@ -104,7 +108,7 @@
           <div class="email ${colorClass}">${colorIcon} ${item.email}</div>
           <div class="status ${colorClass}">${item.status || "SELECT"}</div>
           <div class="days">${String(item.days).padStart(2, "0")}</div>
-          <button class="copy-btn" onclick="copyEmail('${item.email}')">Copy</button>
+          <button class="copy-btn" onclick="copyEmail(${index})">Copy</button>
           <button class="edit-btn" onclick="editEmail(${index})">Edit</button>
           <button class="delete-btn" onclick="deleteEmail(${index})">Delete</button>
         `;
@@ -129,6 +133,7 @@
         emails.push(newItem);
       }
 
+      saveToStorage();
       closeModal();
       renderEmails();
     }
@@ -150,11 +155,13 @@
     function deleteEmail(index) {
       if (confirm("Are you sure you want to delete this email?")) {
         emails.splice(index, 1);
+        saveToStorage();
         renderEmails();
       }
     }
 
-    function copyEmail(email) {
+    function copyEmail(index) {
+      const email = emails[index].email; // copy only the raw email
       navigator.clipboard.writeText(email).then(() => alert("Copied: " + email));
     }
 
@@ -171,7 +178,7 @@
       document.getElementById("modal").style.display = "none";
     }
 
-    // Countdown: simulate daily reduction (1 minute = 1 day for demo)
+    // Daily countdown (every 24h = 1 day)
     setInterval(() => {
       emails.forEach(item => {
         if (item.days > 0) {
@@ -181,8 +188,12 @@
           }
         }
       });
+      saveToStorage();
       renderEmails();
-    }, 60000);
+    }, 86400000); // 24 hours in ms
+
+    // Initial render
+    renderEmails();
   </script>
 </body>
 </html>
