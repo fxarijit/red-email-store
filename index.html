@@ -70,8 +70,6 @@
   <!-- Search + Filter -->
   <div class="top-bar">
     <input type="text" id="searchBox" placeholder="Search email...">
-
-    <!-- Status Filter -->
     <select id="filterBox">
       <option value="All">All</option>
       <option value="Under Use">Under Use</option>
@@ -80,8 +78,6 @@
       <option value="Suspend">Suspend</option>
       <option value="Ban">Ban</option>
     </select>
-
-    <!-- Platform Filter -->
     <div class="platform-filter">
       <label><input type="checkbox" value="Google" class="platformCheck"> Google</label>
       <label><input type="checkbox" value="Facebook" class="platformCheck"> Facebook</label>
@@ -90,7 +86,6 @@
   </div>
 
   <div class="container" id="emailList"></div>
-
   <button class="add-btn" id="addBtn">+ Add Email</button>
 
   <!-- Modal -->
@@ -135,23 +130,30 @@
     const db = getDatabase(app);
     const emailsRef = ref(db, 'emails');
 
+    let emailsCache = {};
     let editKey = null;
+
     const logoMap = {
       "Google": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg",
       "Facebook": "https://upload.wikimedia.org/wikipedia/commons/4/44/Facebook_Logo.png",
       "X": "https://upload.wikimedia.org/wikipedia/commons/5/53/X_logo_2023.svg"
     };
 
-    function renderEmails(snapshot) {
+    // Listen once and keep cache
+    onValue(emailsRef, snapshot => {
+      emailsCache = snapshot.val() || {};
+      renderEmails();
+    });
+
+    function renderEmails() {
       const list = document.getElementById("emailList");
       const searchText = document.getElementById("searchBox").value.toLowerCase();
       const filterValue = document.getElementById("filterBox").value;
       const checkedPlatforms = Array.from(document.querySelectorAll(".platformCheck:checked")).map(cb => cb.value);
 
       list.innerHTML = "";
-      snapshot.forEach(snap => {
-        const item = snap.val();
-        const key = snap.key;
+
+      Object.entries(emailsCache).forEach(([key, item]) => {
         if (!item.email.toLowerCase().includes(searchText)) return;
         if (filterValue !== "All" && item.status !== filterValue) return;
         if (checkedPlatforms.length && !checkedPlatforms.some(p => item.multiSelect.includes(p))) return;
@@ -174,7 +176,7 @@
         `;
         list.appendChild(row);
 
-        // Attach events
+        // Attach button actions
         row.querySelector(".copy-btn").addEventListener("click", () => {
           navigator.clipboard.writeText(item.email);
           const msg = row.querySelector(".copied-msg");
@@ -186,8 +188,6 @@
       });
     }
 
-    onValue(emailsRef, renderEmails);
-
     function saveEmail() {
       const email = document.getElementById("newEmail").value.trim();
       const multiSelect = Array.from(document.getElementById("platforms").selectedOptions).map(o=>o.value);
@@ -195,8 +195,8 @@
       let days = parseInt(document.getElementById("newDays").value)||0;
       if (!email) return alert("Enter email");
 
-      if (status === "Ban") { days = 0; }
-      else if (days === 0) { status = "OK"; }
+      if (status === "Ban") days = 0;
+      else if (days === 0) status = "OK";
 
       const newItem = { email, multiSelect, status, days };
       if(editKey){ set(ref(db,'emails/'+editKey), newItem); editKey=null; }
@@ -217,8 +217,8 @@
           Array.from(document.getElementById("platforms").options).forEach(opt=>{
             opt.selected = (item.multiSelect||[]).includes(opt.value);
           });
-          if(item.status==="Ban"){ document.getElementById("daysWrapper").classList.add("hidden"); }
-          else { document.getElementById("daysWrapper").classList.remove("hidden"); }
+          if(item.status==="Ban") document.getElementById("daysWrapper").classList.add("hidden");
+          else document.getElementById("daysWrapper").classList.remove("hidden");
         }
       });
     }
@@ -238,26 +238,27 @@
     }
     function closeModal(){ document.getElementById("modal").style.display="none"; editKey=null; }
 
+    // Event listeners
     document.getElementById("addBtn").addEventListener("click", openModal);
     document.getElementById("saveBtn").addEventListener("click", saveEmail);
     document.getElementById("modal").addEventListener("click", e=>{ if(e.target===document.getElementById("modal")) closeModal(); });
     document.getElementById("newStatus").addEventListener("change", e=>{
-      if(e.target.value==="Ban"){ document.getElementById("daysWrapper").classList.add("hidden"); }
-      else { document.getElementById("daysWrapper").classList.remove("hidden"); }
+      if(e.target.value==="Ban") document.getElementById("daysWrapper").classList.add("hidden");
+      else document.getElementById("daysWrapper").classList.remove("hidden");
     });
+    document.getElementById("searchBox").addEventListener("input", renderEmails);
+    document.getElementById("filterBox").addEventListener("change", renderEmails);
+    document.querySelectorAll(".platformCheck").forEach(cb=>cb.addEventListener("change", renderEmails));
 
     // Daily countdown
     setInterval(()=>{
-      onValue(emailsRef, snapshot=>{
-        snapshot.forEach(snap=>{
-          let item = snap.val();
-          if(item.status!=="Ban" && item.days>0){
-            item.days--;
-            if(item.days===0) item.status="OK";
-            set(ref(db,'emails/'+snap.key), item);
-          }
-        });
-      }, {onlyOnce:true});
+      Object.entries(emailsCache).forEach(([key,item])=>{
+        if(item.status!=="Ban" && item.days>0){
+          item.days--;
+          if(item.days===0) item.status="OK";
+          set(ref(db,'emails/'+key), item);
+        }
+      });
     }, 86400000);
   </script>
 </body>
