@@ -250,7 +250,7 @@
     document.getElementById("filterBox").addEventListener("change", renderEmails);
     document.querySelectorAll(".platformCheck").forEach(cb=>cb.addEventListener("change", renderEmails));
 
-    // Daily countdown
+    // Daily countdown - CHANGED FROM 86400000 (24 HOURS) TO 1000 (1 SECOND) FOR TESTING
     setInterval(()=>{
       Object.entries(emailsCache).forEach(([key,item])=>{
         if(item.status!=="Ban" && item.days>0){
@@ -259,7 +259,7 @@
           set(ref(db,'emails/'+key), item);
         }
       });
-    }, 86400000);
+    }, 1000); // Changed from 86400000 to 1000 for testing
   </script>
 </body>
 </html>
